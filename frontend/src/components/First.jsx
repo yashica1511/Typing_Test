@@ -7,8 +7,8 @@ const First = () => {
       <header className="w-full px-4 py-6 sm:px-8 md:px-16 lg:px-24 flex justify-between items-center">
         <div className="text-2xl font-bold">Typing Test</div>
         <nav className="space-x-4">
-          <a href="#login" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Login</a>
-          <a href="#signup" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Sign Up</a>
+          <a href="/login" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Login</a>
+          <a href="/register" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Sign Up</a>
         </nav>
       </header>
 

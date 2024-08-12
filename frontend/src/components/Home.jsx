@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Multimode from './Multimode';
 
 const Home = () => {
-  // Simulate user login state and statistics
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const navigate = useNavigate();
+
   const userStats = {
     testsCompleted: 50,
     avgWPM: 75,
@@ -11,6 +14,12 @@ const Home = () => {
       { date: '2024-08-01', activity: 'Completed a typing test with 80 WPM' },
       { date: '2024-07-31', activity: 'Achieved a new high score of 90 WPM' },
     ],
+  };
+
+  const handleLogout = () => {
+    // Clear any authentication state here
+    setIsLoggedIn(false);
+    navigate('/   '); // Redirect to the First page after logout
   };
 
   return (
@@ -24,15 +33,15 @@ const Home = () => {
             <>
               <button
                 className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200"
-                onClick={() => alert('Logging out...')}
+                onClick={handleLogout}
               >
                 Logout
               </button>
             </>
           ) : (
             <>
-              <a href="#login" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Login</a>
-              <a href="#signup" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Sign Up</a>
+              <a href="/login" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Login</a>
+              <a href="/register" className="hidden sm:inline-block px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-200">Sign Up</a>
             </>
           )}
         </nav>
@@ -49,7 +58,7 @@ const Home = () => {
           {isLoggedIn && (
             <>
               <a href="#practice" className="px-6 py-3 bg-transparent border border-white rounded-lg font-semibold hover:bg-white hover:text-blue-600">Practice Mode</a>
-              <a href="#settings" className="px-6 py-3 bg-transparent border border-white rounded-lg font-semibold hover:bg-white hover:text-blue-600">Settings</a>
+              <a href="/multimode" className="px-6 py-3 bg-transparent border border-white rounded-lg font-semibold hover:bg-white hover:text-blue-600">Settings</a>
             </>
           )}
         </div>

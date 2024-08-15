@@ -3,6 +3,7 @@ import { quotesArray, random, allowedKeys } from './Helper';
 import { Link } from 'react-router-dom';
 import { Line } from 'react-chartjs-2'; 
 import { Chart, registerables } from 'chart.js';
+import { saveTypingTestResult, fetchTypingTestResults } from '../services/typingTestService'; 
 
 Chart.register(...registerables);
 
@@ -30,6 +31,33 @@ const TypingTest = () => {
         const newQuote = random(quotesArray);
         setQuote(newQuote);
         setInput(newQuote.quote);
+    }, []);
+
+    useEffect(() => {
+        if (ended) {
+            saveTypingTestResult({
+                wpm,
+                cpm,
+                accuracy,
+                errors: errorIndex,
+                duration: selectedDuration
+            }).then(() => {
+                console.log('Typing test result saved');
+            }).catch(error => {
+                console.error('Error saving typing test result:', error);
+            });
+        }
+    }, [ended, wpm, cpm, accuracy, errorIndex, selectedDuration]);
+
+    useEffect(() => {
+        fetchTypingTestResults().then(results => {
+            if (results.length) {
+                const lastResult = results[results.length - 1];
+                setLastScore(lastResult.wpm || '0');
+            }
+        }).catch(error => {
+            console.error('Error fetching typing test results:', error);
+        });
     }, []);
 
     const handleEnd = () => {
@@ -93,15 +121,6 @@ const TypingTest = () => {
         }
     };
 
-    useEffect(() => {
-        if (ended) localStorage.setItem('wpm', wpm);
-    }, [ended, wpm]);
-
-    useEffect(() => {
-        const storedScore = localStorage.getItem('wpm');
-        if (storedScore) setLastScore(storedScore);
-    }, []);
-
     const wpmData = {
         labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Current Test'],
         datasets: [
@@ -160,7 +179,7 @@ const TypingTest = () => {
                                 </div>
                                 <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
                                     <div className="text-3xl md:text-4xl font-semibold">{cpm}</div>
-                                        <div className="text-lg">CPM</div>
+                                    <div className="text-lg">CPM</div>
                                 </div>
                                 <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
                                     <div className="text-3xl md:text-4xl font-semibold">{lastScore}</div>

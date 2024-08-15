@@ -1,25 +1,49 @@
-import { useState } from 'react';
+// src/components/Home.jsx
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Multimode from './Multimode';
+import axios from 'axios';
 
 const Home = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [userStats, setUserStats] = useState({
+    testsCompleted: 0,
+    avgWPM: 0,
+    highestWPM: 0,
+    recentActivity: [],
+  });
   const navigate = useNavigate();
 
-  const userStats = {
-    testsCompleted: 50,
-    avgWPM: 75,
-    highestWPM: 90,
-    recentActivity: [
-      { date: '2024-08-01', activity: 'Completed a typing test with 80 WPM' },
-      { date: '2024-07-31', activity: 'Achieved a new high score of 90 WPM' },
-    ],
-  };
+  useEffect(() => {
+    if (isLoggedIn) {
+      // Fetch user statistics from the backend
+      axios
+        .get('/api/user/stats')
+        .then((response) => {
+          const { testsCompleted, avgWPM, highestWPM, recentActivity } = response.data;
+          setUserStats({
+            testsCompleted,
+            avgWPM,
+            highestWPM,
+            recentActivity: recentActivity.slice(0, 2) // Show only the most recent two activities
+          });
+        })
+        .catch((error) => {
+          console.error('Error fetching user stats:', error);
+        });
+    }
+  }, [isLoggedIn]);
 
   const handleLogout = () => {
     // Clear any authentication state here
-    setIsLoggedIn(false);
-    navigate('/   '); // Redirect to the First page after logout
+    axios.post('/api/logout')
+      .then(() => {
+        setIsLoggedIn(false);
+        navigate('/'); // Redirect to the First page after logout
+      })
+      .catch((error) => {
+        console.error('Error logging out:', error);
+      });
   };
 
   return (
@@ -75,7 +99,7 @@ const Home = () => {
             </div>
             <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg">
               <h3 className="text-xl font-semibold mb-2">Average WPM</h3>
-              <p className="text-2xl">{userStats.avgWPM}</p>
+              <p className="text-2xl">{userStats.avgWPM.toFixed(2)}</p>
             </div>
             <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg">
               <h3 className="text-xl font-semibold mb-2">Highest WPM</h3>

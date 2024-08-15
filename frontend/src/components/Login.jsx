@@ -34,7 +34,6 @@ const Login = () => {
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    // Handle success (e.g., redirect to dashboard)
                     console.log('Login successful:', data);
                     navigate('/home'); // Redirect to dashboard or home page
                 } else {
@@ -46,7 +45,7 @@ const Login = () => {
         } else {
             setErrors(validationErrors);
         }
-    };
+    };    
 
     return (
         <div className="min-h-screen bg-blue-500 flex flex-col">

@@ -1,31 +1,56 @@
-import { useState, useRef, useEffect } from 'react'; 
-import { quotesArray, random, allowedKeys } from './Helper'; 
+import { useState, useRef, useEffect } from 'react';
+import { quotesArray, random, allowedKeys } from './Helper';
 import { Link } from 'react-router-dom';
-import { Line } from 'react-chartjs-2'; 
+import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
-import { saveTypingTestResult, fetchTypingTestResults } from '../services/typingTestService'; 
+import { saveTypingTestResult, fetchTypingTestResults } from '../services/typingTestService';
+import { useAuth } from '../context/AuthContext'; // Import the auth context
 
 Chart.register(...registerables);
 
 let interval = null;
 
-const TypingTest = () => { 
-    const inputRef = useRef(null); 
-    const outputRef = useRef(null); 
-    const [duration, setDuration] = useState(60); 
-    const [started, setStarted] = useState(false); 
-    const [ended, setEnded] = useState(false); 
-    const [index, setIndex] = useState(0); 
-    const [correctIndex, setCorrectIndex] = useState(0); 
-    const [errorIndex, setErrorIndex] = useState(0); 
-    const [quote, setQuote] = useState({}); 
-    const [input, setInput] = useState(''); 
-    const [cpm, setCpm] = useState(0); 
-    const [wpm, setWpm] = useState(0); 
-    const [accuracy, setAccuracy] = useState(0); 
-    const [isError, setIsError] = useState(false); 
-    const [lastScore, setLastScore] = useState('0');
-    const [selectedDuration, setSelectedDuration] = useState(60); 
+const TypingTest = () => {
+    const inputRef = useRef(null);
+    const outputRef = useRef(null);
+    const [duration, setDuration] = useState(60);
+    const [started, setStarted] = useState(false);
+    const [ended, setEnded] = useState(false);
+    const [index, setIndex] = useState(0);
+    const [correctIndex, setCorrectIndex] = useState(0);
+    const [errorIndex, setErrorIndex] = useState(0);
+    const [quote, setQuote] = useState({});
+    const [input, setInput] = useState('');
+    const [cpm, setCpm] = useState(0);
+    const [wpm, setWpm] = useState(0);
+    const [accuracy, setAccuracy] = useState(0);
+    const [isError, setIsError] = useState(false);
+    const [lastScore, setLastScore] = useState(0);
+    const [selectedDuration, setSelectedDuration] = useState(60);
+    const { user } = useAuth(); // Get user from auth context
+    const interval = useRef(null);
+
+    useEffect(()=>{
+        setLastScore(wpm);
+    },[started])
+
+    useEffect(() => {
+        if (started) {
+            interval.current = setInterval(() => {
+                setDuration((duration) => duration - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval.current); // Clean up interval on unmount
+    }, [started]);
+    
+
+    useEffect(() => {
+        if(duration == 0){
+            setEnded(true);
+            setStarted(false);
+            clearInterval(interval.current);
+        }
+    },[duration])
 
     useEffect(() => {
         const newQuote = random(quotesArray);
@@ -35,19 +60,24 @@ const TypingTest = () => {
 
     useEffect(() => {
         if (ended) {
-            saveTypingTestResult({
-                wpm,
-                cpm,
-                accuracy,
-                errors: errorIndex,
-                duration: selectedDuration
-            }).then(() => {
-                console.log('Typing test result saved');
-            }).catch(error => {
-                console.error('Error saving typing test result:', error);
-            });
+            const saveResult = async () => {
+                try {
+                    await saveTypingTestResult({
+                        wpm,
+                        cpm,
+                        accuracy,
+                        errors: errorIndex,
+                        duration: selectedDuration
+                    });
+                    console.log('Typing test result saved');
+                } catch (error) {
+                    console.error('Error saving typing test result:', error);
+                }
+            };
+            saveResult();
         }
     }, [ended, wpm, cpm, accuracy, errorIndex, selectedDuration]);
+
 
     useEffect(() => {
         fetchTypingTestResults().then(results => {
@@ -63,20 +93,25 @@ const TypingTest = () => {
     const handleEnd = () => {
         setEnded(true);
         setStarted(false);
-        clearInterval(interval);
-    };
+        clearInterval(interval.current);
+    
+        // Assuming user is available from Auth context
+        const userId = user.id; // Make sure user ID exists and is passed
+    
+        saveTypingTestResult({
+            userId,
+            wpm,
+            cpm,
+            accuracy,
+            errors: errorIndex,
+            duration: selectedDuration
+        }).then(() => {
+            console.log('Typing test result saved');
+        }).catch(error => {
+            console.error('Error saving typing test result:', error);
+        });
+    };   
 
-    const setTimer = () => {
-        const now = Date.now();
-        const seconds = now + selectedDuration * 1000;
-        interval = setInterval(() => {
-            const secondLeft = Math.round((seconds - Date.now()) / 1000);
-            setDuration(secondLeft);
-            if (secondLeft <= 0) {
-                handleEnd();
-            }
-        }, 1000);
-    };
 
     const handleStart = () => {
         setStarted(true);
@@ -86,40 +121,45 @@ const TypingTest = () => {
         setTimer();
     };
 
-    const handleKeyDown = e => {
-        e.preventDefault();
-        const { key } = e;
-        const quoteText = quote.quote;
+    const handleKeyDown = (e) => {
+    const { key } = e;
+    const quoteText = quote.quote;
 
+    if (!started || ended) return;
+
+    // Allow space key by handling it separately
+    if (key === ' ') {
+        e.preventDefault(); // Prevent the space from scrolling the page
+    }
+
+    if (allowedKeys.includes(key) || key === ' ') {
         if (key === quoteText.charAt(index)) {
             setIndex(index + 1);
-            const currenChar = quoteText.substring(index + 1, index + quoteText.length);
-            setInput(currenChar);
             setCorrectIndex(correctIndex + 1);
             setIsError(false);
-            outputRef.current.innerHTML += key;
+            outputRef.current.innerHTML += key === ' ' ? '&nbsp;' : key; // Add space or character
         } else {
-            if (allowedKeys.includes(key)) {
-                setErrorIndex(errorIndex + 1);
-                setIsError(true);
-                outputRef.current.innerHTML += `<span class="text-red-500">${key}</span>`;
-            }
+            setErrorIndex(errorIndex + 1);
+            setIsError(true);
+            outputRef.current.innerHTML += `<span class="text-red-500">${key === ' ' ? '&nbsp;' : key}</span>`;
         }
+    }
 
-        const timeRemains = ((selectedDuration - duration) / 60).toFixed(2);
-        const _accuracy = index > 0 ? Math.floor(((index - errorIndex) / index) * 100) : 0;
-        const _wpm = timeRemains > 0 ? Math.round((correctIndex / 5) / timeRemains) : 0;
+    const totalTyped = index + 1;
+    const accuracyValue = totalTyped > 0 ? Math.floor((correctIndex / totalTyped) * 100) : 0;
+    const timeRemains = ((selectedDuration - duration) / 60).toFixed(2);
+    const wpmValue = timeRemains > 0 ? Math.round((correctIndex / 5) / timeRemains) : 0;
 
-        if (index > 5) {
-            setAccuracy(_accuracy);
-            setCpm(correctIndex);
-            setWpm(_wpm);
-        }
+    setAccuracy(accuracyValue);
+    setCpm(correctIndex);
+    setWpm(wpmValue);
 
-        if (index + 1 === quoteText.length || errorIndex > 50) {
-            handleEnd();
-        }
-    };
+    if (index + 1 === quoteText.length || errorIndex > 50) {
+        handleEnd();
+    }
+};
+
+    
 
     const wpmData = {
         labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Current Test'],
@@ -147,6 +187,7 @@ const TypingTest = () => {
         ],
     };
 
+
     return (
         <div className="min-h-screen flex flex-col bg-blue-500 text-white">
             <nav className="bg-blue-700 p-4">
@@ -159,10 +200,10 @@ const TypingTest = () => {
                     <h1 className="text-2xl md:text-4xl font-bold mb-4">Test Your Typing Speed</h1>
 
                     <div className="mb-4">
-                        <select 
+                        <select
                             className="p-2 bg-blue-600 text-white rounded"
                             value={selectedDuration}
-                            onChange={(e) => setSelectedDuration(Number(e.target.value))}
+                            onChange={(e) => setDuration(Number(e.target.value))}
                         >
                             <option value={60}>1 Minute</option>
                             <option value={120}>2 Minutes</option>
@@ -175,22 +216,22 @@ const TypingTest = () => {
                         <div className="flex flex-col md:flex-row w-full md:w-1/2 md:space-x-4">
                             <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
                                 <div className="text-3xl md:text-4xl font-semibold">{wpm}</div>
-                                    <div className="text-lg">WPM</div>
-                                </div>
-                                <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
-                                    <div className="text-3xl md:text-4xl font-semibold">{cpm}</div>
-                                    <div className="text-lg">CPM</div>
-                                </div>
-                                <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
-                                    <div className="text-3xl md:text-4xl font-semibold">{lastScore}</div>
-                                    <div className="text-lg">Last Score</div>
-                                </div>
+                                <div className="text-lg">WPM</div>
                             </div>
-                            <div className="flex flex-col md:flex-row w-full md:w-1/2 md:space-x-4">
-                                <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
-                                    <div className="text-3xl md:text-4xl font-semibold">{accuracy}%</div>
-                                    <div className="text-lg">Accuracy</div>
-                                </div>
+                            <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
+                                <div className="text-3xl md:text-4xl font-semibold">{cpm}</div>
+                                <div className="text-lg">CPM</div>
+                            </div>
+                            <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
+                                <div className="text-3xl md:text-4xl font-semibold">{lastScore}</div>
+                                <div className="text-lg">Last Score</div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col md:flex-row w-full md:w-1/2 md:space-x-4">
+                            <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
+                                <div className="text-3xl md:text-4xl font-semibold">{accuracy}%</div>
+                                <div className="text-lg">Accuracy</div>
+                            </div>
                             <div className="text-center p-4 bg-blue-600 rounded-md w-full md:w-auto mb-4 md:mb-0">
                                 <div className="text-3xl md:text-4xl font-semibold">{duration}</div>
                                 <div className="text-lg">Timer</div>

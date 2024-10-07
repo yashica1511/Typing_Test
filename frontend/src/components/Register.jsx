@@ -53,7 +53,7 @@ const Register = () => {
                     setErrors({ general: data.message });
                 }
             } catch (error) {
-                console.error('Server error:', error);
+                console.error('Username or Email Already Exist', error);
             }
         } else {
             setErrors(validationErrors);

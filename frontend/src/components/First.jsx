@@ -21,23 +21,24 @@ const First = () => {
       </main>
 
       {/* Features Section */}
-      <section id="features" className="mt-16 px-4 sm:px-8 md:px-16 lg:px-24">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-8">Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Real-Time Feedback</h3>
-            <p className="text-base">Get instant feedback on your typing speed, accuracy, and errors as you type.</p>
-          </div>
-          <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Progress Tracking</h3>
-            <p className="text-base">Track your typing improvement over time with detailed statistics and graphs.</p>
-          </div>
-          <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Multiplayer Mode</h3>
-            <p className="text-base">Compete with friends or other users in real-time typing races.</p>
-          </div>
-        </div>
-      </section>
+<section id="features" className="mt-16 px-4 sm:px-8 md:px-16 lg:px-24">
+  <h2 className="text-3xl sm:text-4xl font-bold mb-8">Features</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-2xl duration-300 ease-in-out">
+      <h3 className="text-xl font-semibold mb-4">Real-Time Feedback</h3>
+      <p className="text-base">Get instant feedback on your typing speed, accuracy, and errors as you type.</p>
+    </div>
+    <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-2xl duration-300 ease-in-out">
+      <h3 className="text-xl font-semibold mb-4">Progress Tracking</h3>
+      <p className="text-base">Track your typing improvement over time with detailed statistics and graphs.</p>
+    </div>
+    <div className="bg-white bg-opacity-20 p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-2xl duration-300 ease-in-out">
+      <h3 className="text-xl font-semibold mb-4">Multiplayer Mode</h3>
+      <p className="text-base">Compete with friends or other users in real-time typing races.</p>
+    </div>
+  </div>
+</section>
+      
 
       {/* Footer Section */}
       <footer className="w-full px-4 py-6 sm:px-8 md:px-16 lg:px-24 mt-16 text-center text-sm">

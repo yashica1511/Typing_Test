@@ -81,7 +81,7 @@ const Home = () => {
           <a href="/typingtest" className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-200">Start Typing Test</a>
           {isLoggedIn && (
             <>
-              <a href="#practice" className="px-6 py-3 bg-transparent border border-white rounded-lg font-semibold hover:bg-white hover:text-blue-600">Practice Mode</a>
+              <a href="/typingpractice" className="px-6 py-3 bg-transparent border border-white rounded-lg font-semibold hover:bg-white hover:text-blue-600">Practice Mode</a>
               <a href="/multimode" className="px-6 py-3 bg-transparent border border-white rounded-lg font-semibold hover:bg-white hover:text-blue-600">Settings</a>
             </>
           )}

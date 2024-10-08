@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import { saveTypingTestResult, fetchTypingTestResults } from '../services/typingTestService';
-import { useAuth } from '../context/AuthContext'; // Import the auth context
 
 Chart.register(...registerables);
 
@@ -27,7 +26,6 @@ const TypingTest = () => {
     const [isError, setIsError] = useState(false);
     const [lastScore, setLastScore] = useState(0);
     const [selectedDuration, setSelectedDuration] = useState(60);
-    const { user } = useAuth(); // Get user from auth context
     const interval = useRef(null);
 
     useEffect(()=>{
@@ -121,45 +119,40 @@ const TypingTest = () => {
         setTimer();
     };
 
-    const handleKeyDown = (e) => {
-    const { key } = e;
-    const quoteText = quote.quote;
+    const handleKeyDown = e => {
+        e.preventDefault();
+        const { key } = e;
+        const quoteText = quote.quote;
 
-    if (!started || ended) return;
-
-    // Allow space key by handling it separately
-    if (key === ' ') {
-        e.preventDefault(); // Prevent the space from scrolling the page
-    }
-
-    if (allowedKeys.includes(key) || key === ' ') {
         if (key === quoteText.charAt(index)) {
             setIndex(index + 1);
+            const currenChar = quoteText.substring(index + 1, index + quoteText.length);
+            setInput(currenChar);
             setCorrectIndex(correctIndex + 1);
             setIsError(false);
-            outputRef.current.innerHTML += key === ' ' ? '&nbsp;' : key; // Add space or character
+            outputRef.current.innerHTML += key;
         } else {
-            setErrorIndex(errorIndex + 1);
-            setIsError(true);
-            outputRef.current.innerHTML += `<span class="text-red-500">${key === ' ' ? '&nbsp;' : key}</span>`;
+            if (allowedKeys.includes(key)) {
+                setErrorIndex(errorIndex + 1);
+                setIsError(true);
+                outputRef.current.innerHTML += `<span class="text-red-500">${key}</span>`;
+            }
         }
-    }
 
-    const totalTyped = index + 1;
-    const accuracyValue = totalTyped > 0 ? Math.floor((correctIndex / totalTyped) * 100) : 0;
-    const timeRemains = ((selectedDuration - duration) / 60).toFixed(2);
-    const wpmValue = timeRemains > 0 ? Math.round((correctIndex / 5) / timeRemains) : 0;
+        const timeRemains = ((selectedDuration - duration) / 60).toFixed(2);
+        const _accuracy = index > 0 ? Math.floor(((index - errorIndex) / index) * 100) : 0;
+        const _wpm = timeRemains > 0 ? Math.round((correctIndex / 5) / timeRemains) : 0;
 
-    setAccuracy(accuracyValue);
-    setCpm(correctIndex);
-    setWpm(wpmValue);
+        if (index > 5) {
+            setAccuracy(_accuracy);
+            setCpm(correctIndex);
+            setWpm(_wpm);
+        }
 
-    if (index + 1 === quoteText.length || errorIndex > 50) {
-        handleEnd();
-    }
-};
-
-    
+        if (index + 1 === quoteText.length || errorIndex > 50) {
+            handleEnd();
+        }
+    };
 
     const wpmData = {
         labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Current Test'],
